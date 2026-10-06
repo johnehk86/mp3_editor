@@ -1,0 +1,6 @@
+# Cloudflare Pages 헤더 설정 — 서비스 워커·매니페스트는 항상 최신본 확인
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json

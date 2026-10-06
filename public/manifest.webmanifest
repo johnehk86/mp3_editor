@@ -1,0 +1,32 @@
+{
+  "id": "./",
+  "name": "오디오 편집기 — MP3 자르기·증폭·보컬 제거",
+  "short_name": "오디오 편집기",
+  "description": "MP3·M4A·WAV 파일을 자르고, 페이드와 볼륨 증폭을 넣어 다시 저장하는 편집기",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#17181e",
+  "theme_color": "#17181e",
+  "categories": ["music", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "file_handlers": [
+    {
+      "action": "./",
+      "accept": {
+        "audio/mpeg": [".mp3"],
+        "audio/mp4": [".m4a", ".aac"],
+        "audio/wav": [".wav"],
+        "audio/ogg": [".ogg", ".opus"],
+        "audio/flac": [".flac"]
+      }
+    }
+  ],
+  "launch_handler": { "client_mode": "focus-existing" }
+}

@@ -4,7 +4,7 @@ import { Timeline } from './audio/timeline.js';
 import { Player } from './audio/player.js';
 import { makeEnvelope } from './audio/envelope.js';
 import { exportAudio } from './audio/exporter.js';
-import { removeVocals, detectBpm } from './audio/tools.js';
+import { removeVocals, detectBpm, amplify, measureLevel, gainToDb } from './audio/tools.js';
 import { WaveformView } from './ui/waveform.js';
 import { TimeField } from './ui/timeField.js';
 import { formatTime, clamp } from './util/time.js';
@@ -43,6 +43,10 @@ const els = {
   keepBass: $('#keepBass'),
   bpmValue: $('#bpmValue'),
   bpmNote: $('#bpmNote'),
+  gainRange: $('#gainRange'),
+  gainValue: $('#gainValue'),
+  levelInfo: $('#levelInfo'),
+  limitCheck: $('#limitCheck'),
 };
 
 const state = {
@@ -330,6 +334,76 @@ async function applyVocalRemoval() {
   }
 }
 
+// 볼륨 증폭
+const VOICE_TARGET_DB = -18; // 음성 평균 음량 목표 (dBFS RMS)
+const PEAK_TARGET_DB = -1;
+
+function selectionFrames() {
+  const tl = state.timeline;
+  return [tl.toFrame(state.sel.start), tl.toFrame(state.sel.end)];
+}
+
+function setGainDb(db) {
+  const v = clamp(Math.round(db * 2) / 2, Number(els.gainRange.min), Number(els.gainRange.max));
+  els.gainRange.value = String(v);
+  els.gainValue.textContent = `${v > 0 ? '+' : ''}${v.toFixed(1)} dB`;
+  return v;
+}
+
+function syncLevelInfo() {
+  if (!state.timeline || state.tool !== 'gain') return;
+  const [a, b] = selectionFrames();
+  const p = state.timeline.peakRange(a, b, [0, 0]);
+  const peakDb = gainToDb(Math.max(-p[0], p[1]));
+  els.levelInfo.textContent = `선택 구간 최대 ${Number.isFinite(peakDb) ? peakDb.toFixed(1) : '-∞'} dB`;
+}
+
+async function applyGain(db, message) {
+  const tl = state.timeline;
+  if (!tl) return;
+  if (Math.abs(db) < 0.05) return toast('증폭량이 0 dB예요.');
+  stop();
+  showBusy('볼륨을 조절하는 중…');
+  await nextFrame();
+  try {
+    const [a, b] = selectionFrames();
+    const buffer = amplify(tl, a, b, db, { limit: els.limitCheck.checked });
+    showBusy('파형을 분석하는 중…');
+    await nextFrame();
+    commit(Timeline.fromBuffer(buffer, new Peaks(buffer)), { ...state.sel }, { keepView: true });
+    syncLevelInfo();
+    toast(message ?? `선택 구간을 ${db > 0 ? '+' : ''}${db.toFixed(1)} dB 조절했어요.`);
+  } catch (err) {
+    console.error(err);
+    toast(err.message || '처리하지 못했어요.');
+  } finally {
+    hideBusy();
+  }
+}
+
+async function autoGain(mode) {
+  const tl = state.timeline;
+  if (!tl) return;
+  showBusy('음량을 측정하는 중…');
+  await nextFrame();
+  const [a, b] = selectionFrames();
+  const { peak, rms } = measureLevel(tl, a, b);
+  hideBusy();
+  if (peak < 1e-5) return toast('선택 구간이 무음이에요.');
+
+  if (mode === 'voice') {
+    // 평균 음량을 목표치로. 튀는 소리는 리미터가 잡는다.
+    els.limitCheck.checked = true;
+    const db = setGainDb(VOICE_TARGET_DB - gainToDb(rms));
+    if (db < 0.5) return toast('이미 충분히 큰 소리예요.');
+    applyGain(db, `작은 음성을 +${db.toFixed(1)} dB 키웠어요.`);
+  } else {
+    const db = setGainDb(PEAK_TARGET_DB - gainToDb(peak));
+    if (Math.abs(db) < 0.5) return toast('이미 최대치에 가까워요.');
+    applyGain(db, `최대치에 맞춰 ${db > 0 ? '+' : ''}${db.toFixed(1)} dB 조절했어요.`);
+  }
+}
+
 async function analyzeBpm() {
   if (!state.timeline) return;
   showBusy('템포를 분석하는 중…');
@@ -372,6 +446,7 @@ function selectTool(tool) {
   for (const panel of document.querySelectorAll('.tool-panel')) {
     panel.hidden = panel.dataset.panel !== tool;
   }
+  syncLevelInfo();
 }
 
 // ---------- 저장 ----------
@@ -435,6 +510,7 @@ function syncUI() {
     btn.classList.toggle('active', state.fade[btn.dataset.fade]);
   }
   syncScale();
+  syncLevelInfo();
   waveform.requestDraw();
 }
 
@@ -511,6 +587,10 @@ els.fadeLen.addEventListener('change', () => {
 $('#vocalBtn').addEventListener('click', applyVocalRemoval);
 $('#bpmBtn').addEventListener('click', analyzeBpm);
 $('#tapBtn').addEventListener('click', tapTempo);
+els.gainRange.addEventListener('input', () => setGainDb(Number(els.gainRange.value)));
+$('#gainApplyBtn').addEventListener('click', () => applyGain(Number(els.gainRange.value)));
+$('#voiceAutoBtn').addEventListener('click', () => autoGain('voice'));
+$('#normalizeBtn').addEventListener('click', () => autoGain('peak'));
 
 for (const btn of document.querySelectorAll('.tools .tool')) {
   btn.addEventListener('click', () => selectTool(btn.dataset.tool));
@@ -567,5 +647,38 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('beforeunload', (e) => {
   if (state.undo.length) e.preventDefault();
 });
+
+// ---------- 앱 설치 (PWA) ----------
+// 서비스 워커는 빌드된 배포본에서만 등록 (개발 서버에서는 캐시가 방해됨)
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+
+let installPrompt = null;
+const installBtn = $('#installBtn');
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installPrompt = e;
+  installBtn.hidden = false;
+});
+window.addEventListener('appinstalled', () => {
+  installPrompt = null;
+  installBtn.hidden = true;
+  toast('앱으로 설치했어요. 바탕화면이나 시작 메뉴에서 열 수 있어요.');
+});
+installBtn.addEventListener('click', async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  installBtn.hidden = true;
+});
+
+// 설치된 앱에서 "연결 프로그램"으로 오디오 파일을 열었을 때
+if ('launchQueue' in window) {
+  window.launchQueue.setConsumer(async ({ files }) => {
+    if (files?.length) loadFile(await files[0].getFile());
+  });
+}
 
 syncFormat();

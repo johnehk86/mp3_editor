@@ -500,6 +500,45 @@ body.drag-over .drop-card {
   accent-color: var(--accent);
 }
 
+.gain-control {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.gain-control input[type='range'] {
+  width: 220px;
+  accent-color: var(--accent);
+}
+
+.gain-control output {
+  min-width: 92px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.level-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.level-info .check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.level-info .check input {
+  width: 16px;
+  height: 16px;
+}
+
 .bpm-result {
   display: flex;
   align-items: baseline;

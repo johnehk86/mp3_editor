@@ -4,10 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>오디오 편집기</title>
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4' stroke='%2300f593' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E"
-    />
+    <meta name="description" content="MP3·M4A·WAV 파일을 자르고, 페이드와 볼륨 증폭을 넣어 다시 저장하는 오디오 편집기" />
+    <meta name="theme-color" content="#17181e" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="오디오 편집기" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   </head>
   <body>
     <div class="app" id="app">
@@ -33,6 +39,13 @@
             </svg>
             <span>템포 찾기</span>
           </button>
+          <button class="tool" data-tool="gain">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 9.5h3.5L12 5v14l-4.5-4.5H4z" />
+              <path d="M15.5 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" />
+            </svg>
+            <span>볼륨 증폭</span>
+          </button>
           <button class="tool active" data-tool="cut">
             <svg viewBox="0 0 24 24">
               <circle cx="6" cy="18" r="3" />
@@ -42,6 +55,14 @@
             <span>자르기</span>
           </button>
         </nav>
+
+        <button class="tool install" id="installBtn" hidden title="이 편집기를 컴퓨터에 앱으로 설치">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3v12m-5-5 5 5 5-5" />
+            <path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17" />
+          </svg>
+          <span>앱 설치</span>
+        </button>
 
         <button class="tool help" id="helpBtn">
           <svg viewBox="0 0 24 24">
@@ -140,6 +161,21 @@
                 <div class="spacer"></div>
                 <button class="btn ghost" id="bpmBtn">템포 분석</button>
                 <button class="btn ghost" id="tapBtn" title="박자에 맞춰 눌러 보세요">탭</button>
+              </div>
+
+              <div class="tool-panel" data-panel="gain" hidden>
+                <div class="gain-control">
+                  <input type="range" id="gainRange" min="-12" max="30" step="0.5" value="6" aria-label="증폭량" />
+                  <output id="gainValue">+6.0 dB</output>
+                </div>
+                <div class="level-info">
+                  <span id="levelInfo">선택 구간 최대 -- dB</span>
+                  <label class="check"><input type="checkbox" id="limitCheck" checked /> 클리핑 방지</label>
+                </div>
+                <div class="spacer"></div>
+                <button class="btn ghost" id="voiceAutoBtn" title="평균 음량 기준으로 작은 음성을 크게">음성 크게</button>
+                <button class="btn ghost" id="normalizeBtn" title="가장 큰 소리가 최대치(-1 dB)에 닿도록">최대치 맞춤</button>
+                <button class="btn ghost" id="gainApplyBtn">증폭 적용</button>
               </div>
 
               <button class="btn ghost icon" id="undoBtn" title="실행 취소 (Ctrl+Z)">

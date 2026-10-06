@@ -105,3 +105,61 @@ export function detectBpm(timeline, start, end) {
   while (bpm > 180) bpm /= 2;
   return { bpm, confidence: Math.min(1, ac[best] / ac[0]) };
 }
+
+export const dbToGain = (db) => 10 ** (db / 20);
+export const gainToDb = (g) => (g > 0 ? 20 * Math.log10(g) : -Infinity);
+
+/** 타임라인 프레임 [a, b)의 최대 진폭(0~1)과 RMS */
+export function measureLevel(timeline, a, b) {
+  const peak = timeline.peakRange(a, b, [0, 0]);
+  const chans = Math.min(2, timeline.numberOfChannels);
+  const CHUNK = 1 << 18;
+  const tmp = new Float32Array(CHUNK);
+  let sum = 0;
+  for (let pos = a; pos < b; pos += CHUNK) {
+    const n = Math.min(CHUNK, b - pos);
+    for (let ch = 0; ch < chans; ch++) {
+      timeline.copyChannel(ch, pos, pos + n, tmp, 0);
+      for (let i = 0; i < n; i++) sum += tmp[i] * tmp[i];
+    }
+  }
+  const count = (b - a) * chans;
+  return { peak: Math.max(-peak[0], peak[1]), rms: count ? Math.sqrt(sum / count) : 0 };
+}
+
+/**
+ * 타임라인 프레임 [a, b)를 gainDb만큼 키운 새 AudioBuffer.
+ * limit: 0.98(-0.2 dBFS)을 넘는 부분은 리미터로 눌러 찌그러짐(클리핑)을 막는다.
+ */
+export function amplify(timeline, a, b, gainDb, { limit = true } = {}) {
+  const n = timeline.length;
+  const sr = timeline.sampleRate;
+  const chans = timeline.numberOfChannels;
+  const out = new AudioBuffer({ length: n, numberOfChannels: chans, sampleRate: sr });
+  const data = [];
+  for (let ch = 0; ch < chans; ch++) {
+    data.push(out.getChannelData(ch));
+    timeline.copyChannel(ch, 0, n, data[ch]);
+  }
+
+  const gain = dbToGain(gainDb);
+  const threshold = 0.98;
+  const release = Math.exp(-1 / (0.08 * sr));
+  let env = 1;
+  for (let i = a; i < b; i++) {
+    if (limit) {
+      let x = 0;
+      for (let ch = 0; ch < chans; ch++) x = Math.max(x, Math.abs(data[ch][i]));
+      x *= gain;
+      const target = x > threshold ? threshold / x : 1;
+      // 즉시 줄이고, 천천히 원래대로 회복
+      env = target < env ? target : target + (env - target) * release;
+    }
+    const g = gain * env;
+    for (let ch = 0; ch < chans; ch++) {
+      const v = data[ch][i] * g;
+      data[ch][i] = v > 1 ? 1 : v < -1 ? -1 : v;
+    }
+  }
+  return out;
+}
