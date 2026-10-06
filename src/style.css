@@ -1,0 +1,867 @@
+:root {
+  --bg: #17181e;
+  --sidebar: #1c1d24;
+  --panel: #21222c;
+  --surface: #262733;
+  --surface-hover: #2f3040;
+  --border: #2c2d3a;
+  --text: #e8e9f0;
+  --muted: #8b8d9c;
+  --accent: #00f593;
+  --handle: #5fe3c3;
+  --purple: #7c6cf2;
+  --save: #d9d9e6;
+
+  /* 파형 캔버스 색 (waveform.js에서 읽음) */
+  --wave: #00f593;
+  --wave-dim: #3b3e4c;
+  --sel-bg: rgba(255, 255, 255, 0.025);
+  --playhead: #ffffff;
+
+  color-scheme: dark;
+  font-family: 'Pretendard', 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+}
+
+svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+svg.fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+svg.fill path[fill='none'] {
+  stroke: currentColor;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* ---------- 레이아웃 ---------- */
+.app {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  height: 100%;
+}
+
+.app.collapsed {
+  grid-template-columns: 64px 1fr;
+}
+
+.app.collapsed .tool span {
+  display: none;
+}
+
+.sidebar {
+  background: var(--sidebar);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 18px 0 16px;
+  gap: 8px;
+  min-height: 0;
+}
+
+.menu-btn {
+  align-self: center;
+  margin-bottom: 18px;
+}
+
+.menu-btn svg {
+  width: 36px;
+  height: 36px;
+  stroke-width: 1.6;
+}
+
+.tools {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 6px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: center;
+  position: relative;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.tool svg {
+  width: 30px;
+  height: 30px;
+  stroke-width: 1.5;
+}
+
+.tool:hover {
+  color: var(--text);
+}
+
+.tool.active {
+  color: var(--text);
+  background: var(--bg);
+}
+
+.tool.active::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--purple);
+}
+
+.tool.help svg {
+  fill: var(--muted);
+  stroke: var(--sidebar);
+}
+
+.tool.help:hover svg {
+  fill: var(--text);
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  color: var(--text);
+}
+
+.icon-btn:hover {
+  background: var(--surface);
+}
+
+.main {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 28px;
+  z-index: 2;
+}
+
+.close-btn svg {
+  width: 32px;
+  height: 32px;
+  stroke-width: 2.2;
+}
+
+/* ---------- 파일 열기 ---------- */
+.dropzone {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+
+.drop-card {
+  width: min(560px, 100%);
+  padding: 56px 40px;
+  border: 2px dashed var(--border);
+  border-radius: 24px;
+  text-align: center;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+body.drag-over .drop-card {
+  border-color: var(--accent);
+  background: rgba(0, 245, 147, 0.04);
+}
+
+.drop-icon {
+  width: 64px;
+  height: 64px;
+  color: var(--accent);
+  stroke-width: 2;
+}
+
+.drop-card h1 {
+  margin: 16px 0 8px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.drop-card p {
+  margin: 0 0 28px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.drop-card .hint {
+  margin: 16px 0 0;
+  font-size: 14px;
+}
+
+/* ---------- 버튼 ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 56px;
+  padding: 0 28px;
+  border-radius: 8px;
+  font-size: 20px;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
+}
+
+.btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: #0b2a1d;
+  font-weight: 700;
+  border-radius: 999px;
+  height: 52px;
+  padding: 0 40px;
+  font-size: 18px;
+}
+
+.btn.primary:hover {
+  filter: brightness(1.08);
+}
+
+.btn.ghost {
+  background: var(--panel);
+}
+
+.btn.ghost:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.btn.icon {
+  width: 84px;
+  padding: 0;
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ---------- 편집 화면 ---------- */
+.editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 46px 14px;
+}
+
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  padding-top: 72px;
+}
+
+.file-name {
+  align-self: flex-end;
+  margin: 0 24px 6px 0;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 18px;
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wave {
+  position: relative;
+  height: 224px;
+  background: var(--panel);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: text;
+  touch-action: none;
+  user-select: none;
+}
+
+.wave canvas {
+  position: absolute;
+  top: 0;
+}
+
+.handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 100%;
+  background: var(--handle);
+  cursor: ew-resize;
+  display: grid;
+  place-items: center;
+  z-index: 1;
+}
+
+.handle.left {
+  border-radius: 6px 0 0 6px;
+}
+
+.handle.right {
+  border-radius: 0 6px 6px 0;
+}
+
+.handle i {
+  width: 4px;
+  height: 22px;
+  background: radial-gradient(circle, #1a1b22 1.6px, transparent 2px) 0 0 / 4px 8px repeat-y;
+}
+
+.handle:hover,
+.wave.dragging .handle {
+  filter: brightness(1.1);
+}
+
+.fade-btn {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  z-index: 1;
+  width: 54px;
+  height: 40px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  color: var(--text);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.fade-btn:hover {
+  background: var(--surface-hover);
+}
+
+.fade-btn.active {
+  background: var(--accent);
+  color: #0b2a1d;
+}
+
+.fade-btn svg {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2;
+}
+
+.sel-duration {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  color: var(--muted);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  text-shadow: 0 0 6px var(--panel);
+}
+
+.scrollbar {
+  position: relative;
+  height: 8px;
+  margin: 6px 14px 0;
+  border-radius: 4px;
+  background: var(--panel);
+  cursor: pointer;
+}
+
+.scrollbar .thumb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+  background: #4b4d60;
+  cursor: grab;
+  touch-action: none;
+}
+
+.wave-scale {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px -20px 0;
+  color: var(--muted);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.zoom-hint {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.panel-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 32px;
+  min-height: 66px;
+  padding-right: 24px;
+}
+
+.tool-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.panel-desc {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.field-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.field-inline select {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.bpm-result {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 140px;
+}
+
+.bpm-result strong {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.bpm-result span {
+  color: var(--muted);
+}
+
+/* ---------- 하단 바 ---------- */
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+}
+
+.play-btn {
+  width: 200px;
+  height: 68px;
+  border-radius: 999px;
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.play-btn:hover {
+  background: var(--surface-hover);
+}
+
+.play-btn svg {
+  width: 30px;
+  height: 30px;
+}
+
+.play-btn .i-pause,
+.play-btn.playing .i-play {
+  display: none;
+}
+
+.play-btn.playing .i-pause {
+  display: block;
+}
+
+#toStartBtn {
+  margin: 0 30px 0 26px;
+}
+
+.time-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 18px;
+  margin-left: auto;
+}
+
+.time-group label:not(:first-child) {
+  margin-left: 2px;
+}
+
+.time-field {
+  display: flex;
+  align-items: center;
+  height: 68px;
+  padding: 0 14px 0 26px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+}
+
+.time-field:focus-within {
+  border-color: var(--accent);
+}
+
+.time-field input {
+  width: 8.2ch;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.steppers {
+  display: flex;
+  flex-direction: column;
+}
+
+.steppers button {
+  height: 18px;
+  width: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+  border-radius: 4px;
+}
+
+.steppers button:hover {
+  background: var(--surface-hover);
+}
+
+.steppers svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.4;
+}
+
+.format-wrap {
+  position: relative;
+}
+
+.pill {
+  height: 68px;
+  padding: 0 40px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  font-size: 22px;
+  white-space: nowrap;
+}
+
+.pill:hover {
+  background: var(--panel);
+}
+
+.pill b {
+  color: var(--accent);
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.menu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+
+.menu button {
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.menu button small {
+  color: var(--muted);
+  margin-left: 6px;
+}
+
+.menu button:hover {
+  background: var(--surface-hover);
+}
+
+.menu button[aria-checked='true'] {
+  color: var(--accent);
+}
+
+.btn.save {
+  width: 200px;
+  height: 68px;
+  border-radius: 999px;
+  background: var(--save);
+  color: #1b1c24;
+  font-size: 22px;
+}
+
+.btn.save:hover:not(:disabled) {
+  background: #fff;
+}
+
+/* ---------- 오버레이 ---------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 14, 0.66);
+  display: grid;
+  place-items: center;
+  z-index: 10;
+  padding: 16px;
+}
+
+.card {
+  background: var(--sidebar);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 32px 36px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.busy-card {
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.busy-card p {
+  margin: 0;
+  font-size: 17px;
+}
+
+.busy-card .btn {
+  height: 44px;
+  font-size: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 4px solid var(--surface-hover);
+  border-top-color: var(--accent);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.progress {
+  width: 260px;
+  height: 6px;
+  background: var(--surface);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress div {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.1s;
+}
+
+.help-card {
+  width: min(560px, 100%);
+  max-height: 100%;
+  overflow: auto;
+}
+
+.help-card h2 {
+  margin: 0 0 12px;
+}
+
+.help-card h3 {
+  margin: 20px 0 10px;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.help-card ul {
+  padding-left: 20px;
+  margin: 0;
+  line-height: 1.8;
+  color: #c9cad6;
+}
+
+.help-card dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 20px;
+  margin: 0 0 24px;
+}
+
+.help-card dt {
+  font-family: ui-monospace, Consolas, monospace;
+  color: var(--accent);
+}
+
+.help-card dd {
+  margin: 0;
+  color: #c9cad6;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 120px;
+  transform: translate(-50%, 20px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: 15px;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+  z-index: 20;
+  max-width: calc(100% - 32px);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- 좁은 화면 ---------- */
+@media (max-width: 1280px) {
+  .editor {
+    padding: 0 24px 14px;
+  }
+  .play-btn,
+  .btn.save {
+    width: 120px;
+  }
+  .pill {
+    padding: 0 22px;
+  }
+  #toStartBtn {
+    margin: 0 4px;
+  }
+  .time-field input {
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 980px) {
+  .transport {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .time-group {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+  }
+  .panel-row {
+    flex-wrap: wrap;
+  }
+  .btn {
+    height: 48px;
+    padding: 0 18px;
+    font-size: 17px;
+  }
+  .btn.icon {
+    width: 56px;
+  }
+}

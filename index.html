@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>오디오 편집기</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4' stroke='%2300f593' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <div class="app" id="app">
+      <aside class="sidebar">
+        <button class="icon-btn menu-btn" id="menuBtn" aria-label="메뉴 접기/펼치기">
+          <svg viewBox="0 0 24 24"><path d="M3 5h18M3 12h15M3 19h11" /></svg>
+        </button>
+
+        <nav class="tools" id="tools">
+          <button class="tool" data-tool="vocal">
+            <svg viewBox="0 0 24 24" class="fill">
+              <circle cx="7" cy="7" r="3.2" fill="#3ddc97" stroke="none" />
+              <circle cx="7" cy="16" r="3.2" fill="#7c6cf2" stroke="none" />
+              <path d="M13 11.5h7m-2.5-2.5 2.5 2.5-2.5 2.5" fill="none" />
+            </svg>
+            <span>보컬 제거</span>
+          </button>
+          <button class="tool" data-tool="bpm">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 3h6l4 18H5L9 3z" />
+              <path d="M12 16 17 6" />
+              <path d="M7.5 14h9" />
+            </svg>
+            <span>템포 찾기</span>
+          </button>
+          <button class="tool active" data-tool="cut">
+            <svg viewBox="0 0 24 24">
+              <circle cx="6" cy="18" r="3" />
+              <circle cx="18" cy="18" r="3" />
+              <path d="M8.2 15.8 19 4M15.8 15.8 5 4" />
+            </svg>
+            <span>자르기</span>
+          </button>
+        </nav>
+
+        <button class="tool help" id="helpBtn">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9.5" />
+            <path d="M9.5 9.5a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.5" />
+            <circle cx="12" cy="17" r=".6" />
+          </svg>
+          <span>도움말</span>
+        </button>
+      </aside>
+
+      <main class="main">
+        <button class="icon-btn close-btn" id="closeBtn" aria-label="파일 닫기" title="파일 닫기" hidden>
+          <svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19" /></svg>
+        </button>
+
+        <!-- 파일 열기 화면 -->
+        <section class="dropzone" id="dropzone">
+          <div class="drop-card">
+            <svg viewBox="0 0 24 24" class="drop-icon">
+              <path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4" />
+            </svg>
+            <h1>오디오 편집기</h1>
+            <p>MP3 · M4A · WAV · OGG · FLAC 파일을 자르고, 페이드를 넣고, 다시 저장하세요.</p>
+            <button class="btn primary" id="openBtn">파일 열기</button>
+            <p class="hint">또는 파일을 여기로 끌어다 놓으세요</p>
+            <input type="file" id="fileInput" accept="audio/*,.m4a,.mp3,.wav,.ogg,.flac,.aac,.opus" hidden />
+          </div>
+        </section>
+
+        <!-- 편집 화면 -->
+        <section class="editor" id="editor" hidden>
+          <div class="stage">
+            <div class="file-name" id="fileName"></div>
+
+            <div class="wave" id="wave">
+              <canvas></canvas>
+              <div class="handle left" data-side="left" title="시작 위치"><i></i></div>
+              <div class="handle right" data-side="right" title="끝 위치"><i></i></div>
+              <button class="fade-btn in" data-fade="in" title="페이드 인">
+                <svg viewBox="0 0 24 24"><path d="M3 19c7 0 6-14 18-14" /></svg>
+              </button>
+              <button class="fade-btn out" data-fade="out" title="페이드 아웃">
+                <svg viewBox="0 0 24 24"><path d="M3 5c12 0 11 14 18 14" /></svg>
+              </button>
+              <div class="sel-duration" id="selDuration"></div>
+            </div>
+
+            <div class="scrollbar" id="scrollbar" hidden><div class="thumb"></div></div>
+            <div class="wave-scale">
+              <span id="viewStartLabel"></span>
+              <span class="zoom-hint">휠: 확대/축소 · Shift+휠: 이동</span>
+              <span id="viewEndLabel"></span>
+            </div>
+
+            <div class="panel-row">
+              <div class="tool-panel" data-panel="cut">
+                <label class="field-inline">
+                  페이드 길이
+                  <select id="fadeLen">
+                    <option value="0.5">0.5초</option>
+                    <option value="1">1초</option>
+                    <option value="2" selected>2초</option>
+                    <option value="3">3초</option>
+                    <option value="5">5초</option>
+                    <option value="10">10초</option>
+                  </select>
+                </label>
+                <div class="spacer"></div>
+                <button class="btn ghost" id="trimBtn" title="선택 구간만 남기기">
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="6" cy="18" r="3" />
+                    <circle cx="18" cy="18" r="3" />
+                    <path d="M8.2 15.8 19 4M15.8 15.8 5 4" />
+                  </svg>
+                  잘라내기
+                </button>
+                <button class="btn ghost" id="deleteBtn" title="선택 구간 지우기 (Delete)">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M4 7h16M10 3h4M6 7l1 13h10l1-13M10 11v6M14 11v6" />
+                  </svg>
+                  제거
+                </button>
+              </div>
+
+              <div class="tool-panel" data-panel="vocal" hidden>
+                <p class="panel-desc">가운데에 놓인 소리(주로 보컬)를 상쇄합니다. 스테레오 파일에서만 동작해요.</p>
+                <div class="spacer"></div>
+                <label class="field-inline check"><input type="checkbox" id="keepBass" checked /> 저음 유지</label>
+                <button class="btn ghost" id="vocalBtn">보컬 제거 적용</button>
+              </div>
+
+              <div class="tool-panel" data-panel="bpm" hidden>
+                <div class="bpm-result"><strong id="bpmValue">--</strong><span>BPM</span></div>
+                <span class="panel-desc" id="bpmNote">선택 구간을 분석합니다 (최대 90초)</span>
+                <div class="spacer"></div>
+                <button class="btn ghost" id="bpmBtn">템포 분석</button>
+                <button class="btn ghost" id="tapBtn" title="박자에 맞춰 눌러 보세요">탭</button>
+              </div>
+
+              <button class="btn ghost icon" id="undoBtn" title="실행 취소 (Ctrl+Z)">
+                <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 0 12h-2" /></svg>
+              </button>
+              <button class="btn ghost icon" id="redoBtn" title="다시 실행 (Ctrl+Y)">
+                <svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5" /><path d="M20 9H10a6 6 0 0 0 0 12h2" /></svg>
+              </button>
+            </div>
+          </div>
+
+          <footer class="transport">
+            <button class="play-btn" id="playBtn" aria-label="재생 (Space)">
+              <svg viewBox="0 0 24 24" class="i-play fill"><path d="M7 4.5v15l12.5-7.5z" /></svg>
+              <svg viewBox="0 0 24 24" class="i-pause fill"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z" /></svg>
+            </button>
+            <button class="icon-btn" id="toStartBtn" aria-label="시작 위치로 (Home)" title="시작 위치로 (Home)">
+              <svg viewBox="0 0 24 24" class="fill"><path d="M6 5h2v14H6zM19 5v14L9 12z" /></svg>
+            </button>
+
+            <div class="time-group">
+              <label for="startInput">시작:</label>
+              <div class="time-field" id="startField">
+                <input id="startInput" spellcheck="false" autocomplete="off" />
+                <div class="steppers">
+                  <button data-dir="1" tabindex="-1" aria-label="0.1초 늘리기">
+                    <svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5" /></svg>
+                  </button>
+                  <button data-dir="-1" tabindex="-1" aria-label="0.1초 줄이기">
+                    <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5" /></svg>
+                  </button>
+                </div>
+              </div>
+              <label for="endInput">끝:</label>
+              <div class="time-field" id="endField">
+                <input id="endInput" spellcheck="false" autocomplete="off" />
+                <div class="steppers">
+                  <button data-dir="1" tabindex="-1" aria-label="0.1초 늘리기">
+                    <svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5" /></svg>
+                  </button>
+                  <button data-dir="-1" tabindex="-1" aria-label="0.1초 줄이기">
+                    <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5" /></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="spacer"></div>
+
+            <div class="format-wrap">
+              <button class="pill" id="formatBtn" aria-haspopup="menu">형식: <b id="formatLabel">mp3</b></button>
+              <div class="menu" id="formatMenu" role="menu" hidden>
+                <button role="menuitemradio" data-format="mp3" data-kbps="128">MP3 <small>128 kbps</small></button>
+                <button role="menuitemradio" data-format="mp3" data-kbps="192">MP3 <small>192 kbps</small></button>
+                <button role="menuitemradio" data-format="mp3" data-kbps="320">MP3 <small>320 kbps</small></button>
+                <button role="menuitemradio" data-format="wav">WAV <small>무손실 16bit</small></button>
+              </div>
+            </div>
+            <button class="btn save" id="saveBtn">저장</button>
+          </footer>
+        </section>
+      </main>
+    </div>
+
+    <div class="overlay" id="busy" hidden>
+      <div class="card busy-card">
+        <div class="spinner"></div>
+        <p id="busyText"></p>
+        <div class="progress" id="progress" hidden><div></div></div>
+        <button class="btn ghost" id="cancelBtn" hidden>취소</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="help" hidden>
+      <div class="card help-card">
+        <h2>사용 방법</h2>
+        <ul>
+          <li>양쪽 <b>초록 핸들</b>을 끌어 구간을 고르거나, 파형 위를 드래그해 새 구간을 만드세요.</li>
+          <li>파형을 클릭하면 그 위치부터 재생합니다.</li>
+          <li><b>잘라내기</b>는 선택 구간만 남기고, <b>제거</b>는 선택 구간을 지웁니다.</li>
+          <li>모서리의 곡선 버튼으로 페이드 인/아웃을 켜고 끌 수 있어요.</li>
+          <li><b>저장</b>은 현재 선택 구간을 고른 형식으로 내려받습니다.</li>
+        </ul>
+        <h3>단축키</h3>
+        <dl>
+          <dt>Space</dt><dd>재생 / 일시정지</dd>
+          <dt>Home</dt><dd>시작 위치로</dd>
+          <dt>Delete</dt><dd>선택 구간 제거</dd>
+          <dt>Ctrl+Z / Ctrl+Y</dt><dd>실행 취소 / 다시 실행</dd>
+          <dt>Ctrl+S</dt><dd>저장</dd>
+          <dt>+ / −</dt><dd>확대 / 축소</dd>
+          <dt>휠 · Shift+휠</dt><dd>확대·축소 · 좌우 이동</dd>
+        </dl>
+        <button class="btn primary" data-close>확인</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
