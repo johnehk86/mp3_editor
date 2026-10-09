@@ -3,3 +3,4 @@ dist
 .env.production
 .env.local
 release/
+memory/
