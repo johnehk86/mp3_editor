@@ -14,7 +14,10 @@ const IDS = {
   banner: import.meta.env.VITE_ADMOB_BANNER_ID || TEST_IDS.banner,
   interstitial: import.meta.env.VITE_ADMOB_INTERSTITIAL_ID || TEST_IDS.interstitial,
 };
-const IS_TEST = !import.meta.env.VITE_ADMOB_BANNER_ID;
+// 실제 ID를 넣어도, 여기 등록한 기기(개발자 휴대폰)에는 테스트 광고만 나온다.
+// 기기 ID는 앱 실행 후 logcat의 "setTestDeviceIds" 안내 문구에서 확인.
+const TEST_DEVICES = (import.meta.env.VITE_ADMOB_TEST_DEVICES || '').split(',').map((s) => s.trim()).filter(Boolean);
+const isTestId = (id) => Object.values(TEST_IDS).includes(id);
 
 // 전면 광고는 저장 직후에만, 최소 이 간격을 두고 보여 준다 (너무 잦으면 사용자가 떠나고 정책 위반 위험)
 const INTERSTITIAL_MIN_GAP_MS = 3 * 60 * 1000;
@@ -30,14 +33,19 @@ export async function initAds({ onBannerHeight }) {
     admob = await import('@capacitor-community/admob');
     const { AdMob, AdmobConsentStatus, BannerAdPluginEvents, InterstitialAdPluginEvents } = admob;
 
-    await AdMob.initialize({ initializeForTesting: IS_TEST });
+    await AdMob.initialize({ initializeForTesting: TEST_DEVICES.length > 0, testingDevices: TEST_DEVICES });
 
-    // GDPR 등 동의가 필요한 지역이면 동의 화면을 띄운다 (Google UMP)
-    let consent = await AdMob.requestConsentInfo();
-    if (consent.isConsentFormAvailable && consent.status === AdmobConsentStatus.REQUIRED) {
-      consent = await AdMob.showConsentForm();
+    // GDPR 등 동의가 필요한 지역이면 동의 화면을 띄운다 (Google UMP).
+    // AdMob에 동의 메시지를 아직 안 만들었으면 오류가 나는데, 그래도 광고는 계속 진행한다.
+    try {
+      let consent = await AdMob.requestConsentInfo();
+      if (consent.isConsentFormAvailable && consent.status === AdmobConsentStatus.REQUIRED) {
+        consent = await AdMob.showConsentForm();
+      }
+      if (consent.canRequestAds === false) return;
+    } catch (err) {
+      console.warn('동의 정보 확인 실패', err?.message ?? err);
     }
-    if (consent.canRequestAds === false) return;
 
     AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size) => onBannerHeight(size.height));
     AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => onBannerHeight(0));
@@ -50,7 +58,7 @@ export async function initAds({ onBannerHeight }) {
       adSize: admob.BannerAdSize.ADAPTIVE_BANNER,
       position: admob.BannerAdPosition.BOTTOM_CENTER,
       margin: 0,
-      isTesting: IS_TEST,
+      isTesting: isTestId(IDS.banner),
     });
     prepareInterstitial();
   } catch (err) {
@@ -61,7 +69,7 @@ export async function initAds({ onBannerHeight }) {
 async function prepareInterstitial() {
   interstitialReady = false;
   try {
-    await admob.AdMob.prepareInterstitial({ adId: IDS.interstitial, isTesting: IS_TEST });
+    await admob.AdMob.prepareInterstitial({ adId: IDS.interstitial, isTesting: isTestId(IDS.interstitial) });
   } catch {
     // 불러오기 실패 — 다음 저장 때 다시 시도
     setTimeout(prepareInterstitial, 60 * 1000);

@@ -4,6 +4,6 @@
     <string name="title_activity_main">오디오 편집기</string>
     <string name="package_name">com.johnehk86.audioeditor</string>
     <string name="custom_url_scheme">com.johnehk86.audioeditor</string>
-    <!-- AdMob 앱 ID. 지금은 Google 테스트 ID — 출시 전에 AdMob에서 발급받은 실제 앱 ID(ca-app-pub-...~...)로 교체 -->
-    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <!-- AdMob 앱 ID (광고 단위 ID가 아니라 ~ 가 들어간 앱 ID) -->
+    <string name="admob_app_id">ca-app-pub-6892267130022389~9347813849</string>
 </resources>
