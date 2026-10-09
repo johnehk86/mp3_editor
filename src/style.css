@@ -1228,3 +1228,8 @@ body.drag-over .drop-card {
     width: 100%;
   }
 }
+
+/* 안드로이드 앱에는 끌어다 놓기가 없음 */
+.native .drop-card .hint {
+  display: none;
+}
