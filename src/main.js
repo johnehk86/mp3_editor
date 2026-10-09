@@ -8,6 +8,7 @@ import { removeVocals, detectBpm, amplify, measureLevel, gainToDb } from './audi
 import { WaveformView } from './ui/waveform.js';
 import { TimeField } from './ui/timeField.js';
 import { formatTime, clamp } from './util/time.js';
+import { isNative, initAds, maybeShowInterstitial, saveToDevice } from './native.js';
 
 const MIN_SEL = 0.1; // 최소 선택 길이(초)
 const MIN_VIEW = 0.05; // 최대 확대 시 화면 폭(초)
@@ -471,8 +472,18 @@ async function save() {
       onProgress: (p) => showBusy(`${label}로 저장하는 중… ${Math.floor(p * 100)}%`, { progress: p, cancellable: true }),
     });
     const base = state.fileName.replace(/\.[^.]+$/, '') || 'audio';
-    download(blob, `${base}_편집.${state.format}`);
-    toast(`저장했어요 (${(blob.size / 1024 / 1024).toFixed(1)} MB)`);
+    const name = `${base}_편집.${state.format}`;
+    const size = `${(blob.size / 1024 / 1024).toFixed(1)} MB`;
+    if (isNative) {
+      showBusy('기기에 저장하는 중…', { progress: 0 });
+      const where = await saveToDevice(blob, name, (p) => showBusy('기기에 저장하는 중…', { progress: p }));
+      hideBusy();
+      toast(`${where}에 저장했어요 (${size})`);
+      maybeShowInterstitial();
+    } else {
+      download(blob, name);
+      toast(`저장했어요 (${size})`);
+    }
   } catch (err) {
     if (err.name === 'AbortError') toast('저장을 취소했어요.');
     else {
@@ -574,6 +585,8 @@ window.addEventListener('drop', (e) => {
 
 els.playBtn.addEventListener('click', togglePlay);
 $('#toStartBtn').addEventListener('click', () => seek(state.sel.start));
+$('#zoomInBtn').addEventListener('click', () => zoom(0.5));
+$('#zoomOutBtn').addEventListener('click', () => zoom(2));
 els.trimBtn.addEventListener('click', trim);
 els.deleteBtn.addEventListener('click', removeSelection);
 els.undoBtn.addEventListener('click', undo);
@@ -648,9 +661,16 @@ window.addEventListener('beforeunload', (e) => {
   if (state.undo.length) e.preventDefault();
 });
 
+// ---------- 안드로이드 앱: 광고 ----------
+if (isNative) {
+  document.documentElement.classList.add('native');
+  // 하단 배너 높이만큼 화면을 비워 둔다
+  initAds({ onBannerHeight: (h) => document.documentElement.style.setProperty('--ad-height', `${h}px`) });
+}
+
 // ---------- 앱 설치 (PWA) ----------
-// 서비스 워커는 빌드된 배포본에서만 등록 (개발 서버에서는 캐시가 방해됨)
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+// 서비스 워커는 빌드된 웹 배포본에서만 등록 (개발 서버에서는 캐시가 방해되고, 안드로이드 앱은 필요 없음)
+if (import.meta.env.PROD && !isNative && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 }
 

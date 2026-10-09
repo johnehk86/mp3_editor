@@ -2,7 +2,7 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
     <title>오디오 편집기</title>
     <meta name="description" content="MP3·M4A·WAV 파일을 자르고, 페이드와 볼륨 증폭을 넣어 다시 저장하는 오디오 편집기" />
     <meta name="theme-color" content="#17181e" />
@@ -114,7 +114,15 @@
             <div class="scrollbar" id="scrollbar" hidden><div class="thumb"></div></div>
             <div class="wave-scale">
               <span id="viewStartLabel"></span>
-              <span class="zoom-hint">휠: 확대/축소 · Shift+휠: 이동</span>
+              <span class="zoom-tools">
+                <button class="zoom-btn" id="zoomOutBtn" aria-label="축소" title="축소 (−)">
+                  <svg viewBox="0 0 24 24"><path d="M5 12h14" /></svg>
+                </button>
+                <span class="zoom-hint">휠: 확대/축소 · Shift+휠: 이동</span>
+                <button class="zoom-btn" id="zoomInBtn" aria-label="확대" title="확대 (+)">
+                  <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" /></svg>
+                </button>
+              </span>
               <span id="viewEndLabel"></span>
             </div>
 

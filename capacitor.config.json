@@ -1,0 +1,8 @@
+{
+  "appId": "com.johnehk86.audioeditor",
+  "appName": "오디오 편집기",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#17181e"
+  }
+}

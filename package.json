@@ -6,12 +6,19 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "android:sync": "vite build && cap sync android",
+    "android:open": "cap open android"
   },
   "dependencies": {
-    "@breezystack/lamejs": "^1.2.7"
+    "@breezystack/lamejs": "^1.2.7",
+    "@capacitor-community/admob": "^8.2.1",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.4"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "vite": "^8.3.3"
   }
 }

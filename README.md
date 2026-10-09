@@ -10,6 +10,10 @@ npm run dev      # http://localhost:5173
 npm run build    # dist/ 에 정적 파일 생성
 ```
 
+## 안드로이드 앱 (AdMob 광고)
+
+Capacitor로 감싼 안드로이드 앱 빌드와 출시 방법은 [ANDROID.md](ANDROID.md) 참고.
+
 ## 앱으로 설치
 
 배포된 주소를 Chrome/Edge로 열고 왼쪽 메뉴의 **앱 설치** 버튼(또는 주소창의 설치 아이콘)을 누르면

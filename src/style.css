@@ -904,3 +904,327 @@ body.drag-over .drop-card {
     width: 56px;
   }
 }
+
+/* ---------- 확대 버튼 ---------- */
+.zoom-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.zoom-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: var(--muted);
+}
+
+.zoom-btn:hover {
+  background: var(--panel);
+  color: var(--text);
+}
+
+.zoom-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.2;
+}
+
+/* 핸들을 손가락으로 잡기 쉽게 터치 영역을 넓힌다 */
+.handle::before {
+  content: '';
+  position: absolute;
+  inset: 0 -12px;
+}
+
+/* ---------- 안드로이드 앱: 하단 배너 자리 ---------- */
+:root {
+  --ad-height: 0px;
+}
+
+.app {
+  height: calc(100% - var(--ad-height));
+}
+
+/* ---------- 휴대폰 (세로) ---------- */
+@media (max-width: 720px) {
+  .app,
+  .app.collapsed {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar {
+    flex-direction: row;
+    align-items: center;
+    padding: 0 4px;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* 휴대폰에서는 메뉴 접기 없이 항상 아이콘+글자 */
+  .menu-btn {
+    display: none;
+  }
+
+  .app.collapsed .tool span {
+    display: block;
+  }
+
+  .tools {
+    flex-direction: row;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tool {
+    flex: 1;
+    min-width: 62px;
+    padding: 10px 2px 8px;
+    gap: 3px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .tool svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .tool.active::after {
+    top: auto;
+    left: 0;
+    width: auto;
+    height: 3px;
+  }
+
+  .tool.help,
+  .tool.install {
+    flex: 0 0 auto;
+    min-width: 52px;
+  }
+
+  .main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .close-btn {
+    top: 4px;
+    right: 6px;
+  }
+
+  .close-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .dropzone {
+    padding: 16px;
+  }
+
+  .drop-card {
+    padding: 40px 20px;
+  }
+
+  .drop-card h1 {
+    font-size: 24px;
+  }
+
+  .editor {
+    padding: 0 12px 12px;
+  }
+
+  .stage {
+    flex: 0 0 auto;
+    padding-top: 52px;
+  }
+
+  .file-name {
+    align-self: flex-start;
+    margin: 0 0 6px;
+    max-width: calc(100% - 44px);
+    font-size: 14px;
+  }
+
+  .wave {
+    height: 180px;
+  }
+
+  .fade-btn {
+    width: 40px;
+    height: 32px;
+  }
+
+  .fade-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .sel-duration {
+    font-size: 13px;
+  }
+
+  .scrollbar {
+    height: 14px;
+    border-radius: 7px;
+  }
+
+  .scrollbar .thumb {
+    border-radius: 7px;
+  }
+
+  .wave-scale {
+    margin: 6px 0 0;
+    font-size: 12px;
+  }
+
+  .zoom-hint {
+    display: none;
+  }
+
+  .zoom-btn {
+    width: 40px;
+    height: 34px;
+    background: var(--panel);
+    color: var(--text);
+  }
+
+  .panel-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+    min-height: 0;
+    padding-right: 0;
+  }
+
+  .tool-panel {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tool-panel .spacer {
+    display: none;
+  }
+
+  .panel-row > .btn.icon {
+    flex: 1;
+  }
+
+  .btn {
+    height: 44px;
+    padding: 0 14px;
+    font-size: 15px;
+    flex: 1 1 auto;
+  }
+
+  .btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .btn.icon {
+    width: auto;
+  }
+
+  .panel-desc,
+  .field-inline {
+    font-size: 13px;
+  }
+
+  .gain-control {
+    flex: 1 1 100%;
+  }
+
+  .gain-control input[type='range'] {
+    flex: 1;
+    width: auto;
+  }
+
+  .gain-control output {
+    font-size: 20px;
+  }
+
+  .bpm-result strong {
+    font-size: 30px;
+  }
+
+  .transport {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 14px;
+    margin-top: 14px;
+  }
+
+  .transport > .spacer {
+    display: none;
+  }
+
+  .play-btn {
+    width: auto;
+    flex: 1;
+    height: 52px;
+  }
+
+  #toStartBtn {
+    margin: 0;
+  }
+
+  .time-group {
+    order: 3;
+    flex: 1 1 100%;
+    margin: 0;
+    gap: 6px;
+    font-size: 14px;
+  }
+
+  .time-field {
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    padding: 0 6px 0 14px;
+  }
+
+  .time-field input {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    font-size: 17px;
+  }
+
+  .pill {
+    height: 52px;
+    padding: 0 14px;
+    font-size: 15px;
+  }
+
+  .btn.save {
+    width: auto;
+    flex: 1;
+    height: 52px;
+    font-size: 18px;
+  }
+
+  .menu {
+    left: auto;
+    right: 0;
+  }
+
+  .toast {
+    bottom: calc(var(--ad-height) + 24px);
+  }
+
+  .busy-card {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .progress {
+    width: 100%;
+  }
+}
