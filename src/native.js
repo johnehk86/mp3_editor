@@ -22,7 +22,10 @@ const isTestId = (id) => Object.values(TEST_IDS).includes(id);
 // 전면 광고는 저장 직후에만, 최소 이 간격을 두고 보여 준다 (너무 잦으면 사용자가 떠나고 정책 위반 위험)
 const INTERSTITIAL_MIN_GAP_MS = 3 * 60 * 1000;
 
+const AD_RETRY_MS = 60 * 1000; // 광고를 못 받았을 때 다시 요청하는 간격
+
 let admob = null;
+let bannerRetry = 0;
 let interstitialReady = false;
 let lastInterstitialAt = 0;
 
@@ -48,21 +51,34 @@ export async function initAds({ onBannerHeight }) {
     }
 
     AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size) => onBannerHeight(size.height));
-    AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => onBannerHeight(0));
+    AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => {
+      // 광고가 없으면(no fill 등) 자리를 비우고 잠시 뒤 다시 요청
+      onBannerHeight(0);
+      clearTimeout(bannerRetry);
+      bannerRetry = setTimeout(showBanner, AD_RETRY_MS);
+    });
     AdMob.addListener(InterstitialAdPluginEvents.Loaded, () => (interstitialReady = true));
     AdMob.addListener(InterstitialAdPluginEvents.Dismissed, prepareInterstitial);
     AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, prepareInterstitial);
 
-    await AdMob.showBanner({
+    showBanner();
+    prepareInterstitial();
+  } catch (err) {
+    console.warn('광고 초기화 실패', err);
+  }
+}
+
+async function showBanner() {
+  try {
+    await admob.AdMob.showBanner({
       adId: IDS.banner,
       adSize: admob.BannerAdSize.ADAPTIVE_BANNER,
       position: admob.BannerAdPosition.BOTTOM_CENTER,
       margin: 0,
       isTesting: isTestId(IDS.banner),
     });
-    prepareInterstitial();
-  } catch (err) {
-    console.warn('광고 초기화 실패', err);
+  } catch {
+    // 실패는 FailedToLoad 이벤트에서 다시 시도
   }
 }
 
@@ -72,7 +88,7 @@ async function prepareInterstitial() {
     await admob.AdMob.prepareInterstitial({ adId: IDS.interstitial, isTesting: isTestId(IDS.interstitial) });
   } catch {
     // 불러오기 실패 — 다음 저장 때 다시 시도
-    setTimeout(prepareInterstitial, 60 * 1000);
+    setTimeout(prepareInterstitial, AD_RETRY_MS);
   }
 }
 
