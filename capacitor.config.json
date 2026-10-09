@@ -4,5 +4,10 @@
   "webDir": "dist",
   "android": {
     "backgroundColor": "#17181e"
+  },
+  "plugins": {
+    "SystemBars": {
+      "style": "DARK"
+    }
   }
 }
