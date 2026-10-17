@@ -1233,3 +1233,13 @@ body.drag-over .drop-card {
 .native .drop-card .hint {
   display: none;
 }
+
+.help-links {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.help-links a {
+  color: var(--accent);
+}

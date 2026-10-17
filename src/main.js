@@ -664,6 +664,8 @@ window.addEventListener('beforeunload', (e) => {
 // ---------- 안드로이드 앱: 광고 ----------
 if (isNative) {
   document.documentElement.classList.add('native');
+  // 앱 안에서는 target 없이 이동해야 Capacitor가 외부 링크를 휴대폰 브라우저로 연다
+  for (const link of document.querySelectorAll('a[target="_blank"]')) link.removeAttribute('target');
   // 하단 배너 높이만큼 화면을 비워 둔다
   initAds({ onBannerHeight: (h) => document.documentElement.style.setProperty('--ad-height', `${h}px`) });
 }
